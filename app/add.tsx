@@ -1,6 +1,7 @@
-import DrugList from "@/components/DrugList";
+import EntityList from "@/components/EntityList";
 import Form from "@/components/Form";
 import { Link } from "expo-router";
+import React from "react";
 import { Dimensions, Text, View } from "react-native";
 import { useTheme } from "react-native-paper";
 

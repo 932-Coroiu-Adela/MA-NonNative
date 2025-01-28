@@ -2,18 +2,18 @@ import { initDB } from "@/database/localdb";
 import { call, put, select, takeEvery } from "redux-saga/effects";
 import { SERVER_IP, SERVER_PORT } from "@/constants/Constants";
 import axios, { AxiosResponse } from "axios"
-import { addDrug, fetchDrugs, removeDrug, updateDrug } from "./localdbSaga";
+import { addEntity, fetchEntities, removeEntity, updateEntity } from "./localdbSaga";
 import { fetch, NetInfoState } from "@react-native-community/netinfo";
 import { setConnected, setOnline } from "@/redux/features/status/statusSlice";
 import { Status } from "@/redux/features/status/status";
-import { addDrugServer, checkConnection, fetchDrugsServer, removeDrugServer, updateDrugServer, webSocketSaga } from "./serverSaga";
+import { addEntityServer, checkConnection, fetchEntitiesServer, removeEntityServer, updateEntityServer, webSocketSaga } from "./serverSaga";
 
 
 function* initialize() {
     yield call(initDB);
     yield call(checkConnection);
     console.log("Initialized");
-    yield put({ type: 'drug/fetch' });
+    yield put({ type: 'entity/fetch' });
     yield webSocketSaga();
 }
 
@@ -21,44 +21,44 @@ function* initialize() {
 function* fetchOfflineOrOnline() {
     const status: Status = yield select(state => state.status);
     if (status.isConnected && status.isOnline) {
-        yield call(fetchDrugsServer);
+        yield call(fetchEntitiesServer);
     } else {
-        yield call(fetchDrugs);
+        yield call(fetchEntities);
     }
 }
 
-function* addDrugOfflineOrOnline(action: { type: string, payload: any }) {
+function* addEntityOfflineOrOnline(action: { type: string, payload: any }) {
     const status: Status = yield select(state => state.status);
     if (status.isConnected && status.isOnline) {
-        yield call(addDrugServer, action);
+        yield call(addEntityServer, action);
     } else {
-        yield call(addDrug, action);
+        yield call(addEntity, action);
     }
 }
 
-function* removeDrugOfflineOrOnline(action: { type: string, payload: number }) {
+function* removeEntityOfflineOrOnline(action: { type: string, payload: number }) {
     const status: Status = yield select(state => state.status);
     if (status.isConnected && status.isOnline) {
-        yield call(removeDrugServer, action);
+        yield call(removeEntityServer, action);
     } else {
-        yield call(removeDrug, action);
+        yield call(removeEntity, action);
     }
 }
 
-function* updateDrugOfflineOrOnline(action: { type: string, payload: any }) {
+function* updateEntityOfflineOrOnline(action: { type: string, payload: any }) {
     const status: Status = yield select(state => state.status);
     if (status.isConnected && status.isOnline) {
-        yield call(updateDrugServer, action);
+        yield call(updateEntityServer, action);
     } else {
-        yield call(updateDrug, action);
+        yield call(updateEntity, action);
     }
 }
 
 export function* rootSaga() {
-    yield takeEvery('drug/initialize', initialize);
-    yield takeEvery('drug/fetch', fetchOfflineOrOnline);
-    yield takeEvery('drug/add', addDrugOfflineOrOnline);
-    yield takeEvery('drug/remove', removeDrugOfflineOrOnline);
-    yield takeEvery('drug/update', updateDrugOfflineOrOnline);
+    yield takeEvery('entity/initialize', initialize);
+    yield takeEvery('entity/fetch', fetchOfflineOrOnline);
+    yield takeEvery('entity/add', addEntityOfflineOrOnline);
+    yield takeEvery('entity/remove', removeEntityOfflineOrOnline);
+    yield takeEvery('entity/update', updateEntityOfflineOrOnline);
     yield takeEvery('status/checkConnection', checkConnection);
 }

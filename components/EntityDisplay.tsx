@@ -1,10 +1,11 @@
-import { Drug } from "@/redux/features/drug/drug";
-import { View, Text, StyleSheet } from "react-native";
+import { Entity } from "@/redux/features/entity/entity";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Button, Divider, MD3Theme, useTheme } from "react-native-paper";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
+import React from "react";
 
-export default function DrugDisplay(props: {drug: Drug, onUpdate: (drugId: number) => void, onDelete: (drugId: number) => void}) {
+export default function EntityDisplay(props: {entity: Entity, onUpdate: (entityId: number) => void, onDelete: (entityId: number) => void, onPressForDetails: (entityId: number) => void}) {
     const theme = useTheme();
     const style = styles(theme);
     const status = useSelector((state: RootState) => state.status);
@@ -16,48 +17,51 @@ export default function DrugDisplay(props: {drug: Drug, onUpdate: (drugId: numbe
             </View>
             <View className="column" style={style.boxForeground}>
                 <View style={style.rowHeadlineMargin}>
+                    
                     <View className="row" style={style.rowHeadline}>
-                        <View className="column" style={style.column}>
-                            <Text style={style.nameText}>{props.drug.name}</Text>
-                            <Text style={style.manufacturerText}>{props.drug.manufacturer}</Text>
-                        </View>    
+                        <TouchableOpacity style={style.wrapForRow} onPress={() => props.onPressForDetails(props.entity.id)}>
+                            <View className="column" style={style.column}>
+                                <Text style={style.nameText}>{props.entity.date}</Text>
+                                <Text style={style.manufacturerText}>{props.entity.description}</Text>
+                            </View>   
+                        </TouchableOpacity> 
                         <View className="row" style={style.rowCTA}>
-                            <Button disabled={!status.isConnected || !status.isOnline} contentStyle={{paddingHorizontal: 8}} textColor={theme.colors.primary} buttonColor={theme.colors.surface} style={style.editButton}  onPress={() => props.onUpdate(props.drug.id)}>Edit</Button>
-                            <Button contentStyle={{paddingHorizontal: 8}} textColor={theme.colors.onPrimary} buttonColor={theme.colors.primary} onPress={() => props.onDelete(props.drug.id)} >Delete</Button>
+                            <Button disabled={!status.isConnected || !status.isOnline} contentStyle={{paddingHorizontal: 8}} textColor={theme.colors.primary} buttonColor={theme.colors.surface} style={style.editButton}  onPress={() => props.onUpdate(props.entity.id)}>Edit</Button>
+                            <Button contentStyle={{paddingHorizontal: 8}} textColor={theme.colors.onPrimary} buttonColor={theme.colors.primary} onPress={() => props.onDelete(props.entity.id)} >Delete</Button>
                         </View>
                     </View>
                 </View>
-                <Divider style={style.horizontalDivider} />
+                {/*<Divider style={style.horizontalDivider} />
+                 <View style={style.chipMargin}>
+                    <View className="row" style={style.chip}>
+                        <View className="box" style={style.labelChip}>
+                            <Text style={style.label}>Amount:</Text>
+                        </View>
+                        <View className="box" style={style.valueChip}>
+                            <Text style={style.value}>{props.entity.amount}</Text>
+                        </View>
+                    </View>
+                </View>
+                <View style={style.chipMargin}>
+                    <View className="row" style={style.chip}>
+                        <View className="box" style={style.labelChip}>
+                            <Text style={style.label}>Type:</Text>
+                        </View>
+                        <View className="box" style={style.valueChip}>
+                            <Text style={style.value}>{props.entity.type}</Text>
+                        </View>
+                    </View>
+                </View>
                 <View style={style.chipMargin}>
                     <View className="row" style={style.chip}>
                         <View className="box" style={style.labelChip}>
                             <Text style={style.label}>Category:</Text>
                         </View>
                         <View className="box" style={style.valueChip}>
-                            <Text style={style.value}>{props.drug.category}</Text>
+                            <Text style={style.value}>{props.entity.category}</Text>
                         </View>
                     </View>
-                </View>
-                <View style={style.chipMargin}>
-                    <View className="row" style={style.chip}>
-                        <View className="box" style={style.labelChip}>
-                            <Text style={style.label}># of Units:</Text>
-                        </View>
-                        <View className="box" style={style.valueChip}>
-                            <Text style={style.value}>{props.drug.numberOfUnits.toFixed(0)}</Text>
-                        </View>
-                    </View>
-                </View>
-                <View style={{...style.chipMargin, ...style.lastChipMargin}}>
-                    <View className="row" style={style.chip}>
-                        <View className="box" style={style.labelChip}>
-                            <Text style={style.label}>Price:</Text>
-                        </View>
-                        <View className="box" style={style.valueChip}>
-                            <Text style={style.value}>${props.drug.price.toFixed(2)}</Text>
-                        </View>
-                    </View>
-                </View>
+                </View> */}
             </View>
         </View>
   );
@@ -80,6 +84,7 @@ const styles = (theme: MD3Theme) => StyleSheet.create({
         position: "relative",
         display: "flex",
         flexDirection: "column",
+        padding: 16,
         top: 0,
         left: 0,
         zIndex: 20,
@@ -104,6 +109,13 @@ const styles = (theme: MD3Theme) => StyleSheet.create({
         width: "100%",
         height: 44,
         
+    },
+    wrapForRow:{
+        width: "40%",
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "flex-start",
     },
     column:{
         display: "flex",

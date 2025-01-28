@@ -1,39 +1,39 @@
 import { call, put, takeEvery, takeLatest } from 'redux-saga/effects';
 
-import { Drug } from '@/redux/features/drug/drug';
-import { deleteDrug, editDrug, getDBConnection, getDrugs, insertDrug, insertTempDrug } from '@/database/localdb';
+import { Entity } from '@/redux/features/entity/entity';
+import { deleteEntity, editEntity, getDBConnection, getEntities, insertEntity, insertTempEntity } from '@/database/localdb';
 import { setErrorStatus } from '@/redux/features/errorstatus/errorStatusSlice';
 
-export function* addDrug(action: { type: string, payload: Drug }): Generator<any, void, any> {
+export function* addEntity(action: { type: string, payload: Entity }): Generator<any, void, any> {
     try {
         const db = yield call(getDBConnection);
-        const id = yield call(insertDrug, db, action.payload);
-        yield call(insertTempDrug, db, { id: id, type: 1 });
+        const id = yield call(insertEntity, db, action.payload);
+        yield call(insertTempEntity, db, { id: id, type: 1 });
         const { id: _, ...payloadWithoutId } = action.payload;
-        yield put({ type: "drug/addDrug", payload: { id: id, ...payloadWithoutId } });
+        yield put({ type: "entity/addEntity", payload: { id: id, ...payloadWithoutId } });
     } catch (e) {
         console.error(e);
         yield put(setErrorStatus({ message: "There has been a Local Database Error", status: true }));
     }
 }
 
-export function* removeDrug(action: { type: string, payload: number }): Generator<any, void, any> {
+export function* removeEntity(action: { type: string, payload: number }): Generator<any, void, any> {
     try {
         const db = yield call(getDBConnection);
-        yield call(deleteDrug, db, action.payload);
-        yield call(insertTempDrug, db, { id: action.payload, type: 2 });
-        yield put({ type: "drug/removeDrug", payload: action.payload });
+        yield call(deleteEntity, db, action.payload);
+        yield call(insertTempEntity, db, { id: action.payload, type: 2 });
+        yield put({ type: "entity/removeEntity", payload: action.payload });
     } catch (e) {
         console.error(e);
         yield put(setErrorStatus({ message: "There has been a Local Database Error", status: true }));
     }
 }
 
-export function* updateDrug(action: { type: string, payload: Drug }): Generator<any, void, any> {
+export function* updateEntity(action: { type: string, payload: Entity }): Generator<any, void, any> {
     try {
         const db = yield call(getDBConnection);
-        yield call(editDrug, db, action.payload);
-        yield put({ type: "drug/updateDrug", payload: action.payload });
+        yield call(editEntity, db, action.payload);
+        yield put({ type: "entity/updateEntity", payload: action.payload });
     } catch (e) {
         console.error(e);
         yield put(setErrorStatus({ message: "There has been a Local Database Error", status: true }));
@@ -41,11 +41,11 @@ export function* updateDrug(action: { type: string, payload: Drug }): Generator<
 }
 
 
-export function* fetchDrugs(): Generator<any, void, any> {
+export function* fetchEntities(): Generator<any, void, any> {
     try {
         const db = yield call(getDBConnection);
-        const drugs = yield call(getDrugs, db);
-        yield put({ type: "drug/fetchDrugs", payload: drugs });
+        const entities = yield call(getEntities, db);
+        yield put({ type: "entity/fetchEntities", payload: entities });
     } catch (e) {
         console.error(e);
         yield put(setErrorStatus({ message: "There has been a Local Database Error", status: true }));

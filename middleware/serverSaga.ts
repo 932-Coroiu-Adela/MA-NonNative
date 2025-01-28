@@ -1,7 +1,7 @@
-import { deleteDrugServer, editDrugServer, getDrugsServer, insertDrugServer, syncOfflineData } from "@/database/serverdb";
-import { Drug } from "@/redux/features/drug/drug";
+import { deleteEntityServer, editEntityServer, getEntitiesServer, insertEntityServer, syncOfflineData } from "@/database/serverdb";
+import { Entity } from "@/redux/features/entity/entity";
 import { all, call, put, retry, select, take } from "redux-saga/effects";
-import { deleteDrug, deleteTempDrug, editDrug, getDBConnection, getTempDrugs, insertDrug, rehydrateLocalDB, TempDrug } from "@/database/localdb";
+import { deleteEntity, deleteTempEntity, editEntity, getDBConnection, getTempEntities, insertEntity, rehydrateLocalDB, TempEntity } from "@/database/localdb";
 import { SQLiteDatabase } from "expo-sqlite";
 import { Status } from "@/redux/features/status/status";
 import { SERVER_IP, SERVER_PORT } from "@/constants/Constants";
@@ -16,26 +16,27 @@ import getSocket from "@/database/socket";
 import { setErrorStatus } from "@/redux/features/errorstatus/errorStatusSlice";
 import ReconnectingWebSocket from "reconnecting-websocket";
 
+const socket = getSocket();
 
-export function* fetchDrugsServer() {
+export function* fetchEntitiesServer() {
     try {
-        const drugs: Drug[] = yield call(() => getDrugsServer());
-        console.log(drugs);
-        yield call(rehydrateLocalDB, drugs);
-        yield put({ type: "drug/fetchDrugs", payload: drugs });
+        const entities: Entity[] = yield call(() => getEntitiesServer());
+        console.log(entities);
+        yield call(rehydrateLocalDB, entities);
+        yield put({ type: "entity/fetchEntities", payload: entities });
     } catch (error) {
         console.log(error);
         yield put(setErrorStatus({ message: "There has been a Network Error", status: true }));
     }
 }
 
-export function* addDrugServer(action: { type: string, payload: Drug }) {
+export function* addEntityServer(action: { type: string, payload: Entity }) {
     try {
-        const drug: Drug = yield call(() => insertDrugServer(action.payload));
+        const entity: Entity = yield call(() => insertEntityServer(action.payload));
         const db: SQLiteDatabase = yield call(getDBConnection);
-        console.log(drug);
-        yield call(() => insertDrug(db, drug));
-        yield put({ type: "drug/addDrug", payload: drug });
+        console.log(entity);
+        yield call(() => insertEntity(db, entity));
+        yield put({ type: "entity/addEntity", payload: entity });
     }
     catch (error) {
         console.log(error);
@@ -43,12 +44,12 @@ export function* addDrugServer(action: { type: string, payload: Drug }) {
     }
 }
 
-export function* removeDrugServer(action: { type: string, payload: number }) {
+export function* removeEntityServer(action: { type: string, payload: number }) {
     try {
-        yield call(() => deleteDrugServer(action.payload));
+        yield call(() => deleteEntityServer(action.payload));
         const db: SQLiteDatabase = yield call(getDBConnection);
-        yield call(() => deleteDrug(db, action.payload));
-        yield put({ type: "drug/removeDrug", payload: action.payload });
+        yield call(() => deleteEntity(db, action.payload));
+        yield put({ type: "entity/removeEntity", payload: action.payload });
     }
     catch (error) {
         console.log(error);
@@ -56,12 +57,12 @@ export function* removeDrugServer(action: { type: string, payload: number }) {
     }
 }
 
-export function* updateDrugServer(action: { type: string, payload: Drug }) {
+export function* updateEntityServer(action: { type: string, payload: Entity }) {
     try {
-        yield call(() => editDrugServer(action.payload));
+        yield call(() => editEntityServer(action.payload));
         const db: SQLiteDatabase = yield call(getDBConnection);
-        yield call(() => editDrug(db, action.payload));
-        yield put({ type: "drug/updateDrug", payload: action.payload });
+        yield call(() => editEntity(db, action.payload));
+        yield put({ type: "entity/updateEntity", payload: action.payload });
     }
     catch (error) {
         console.log(error);
@@ -81,7 +82,7 @@ export function* checkConnection() {
         }
         yield put(setOnline(true));
         console.log("Internet connection available");
-        const response: AxiosResponse = yield call(axios.get, `http://${SERVER_IP}:${SERVER_PORT}/`, { timeout: 5000, validateStatus: () => true });
+        const response: AxiosResponse = yield call(axios.get, `http://${SERVER_IP}:${SERVER_PORT}/transactions`, { timeout: 5000, validateStatus: () => true });
         if (!(response.status === 200)) {
             console.error("Connection to server failed");
             return;
@@ -95,7 +96,6 @@ export function* checkConnection() {
 }
 
 export function webSocketChannel() {
-    const socket = getSocket();
     return eventChannel((emit) => {
         console.log("Websocket saga started");
         socket.onopen = () => {
@@ -124,10 +124,9 @@ export function webSocketChannel() {
 
 export function* webSocketSaga() {
     const channel: EventChannel<PayloadAction> = yield call(webSocketChannel);
-    const socket: ReconnectingWebSocket = yield call(getSocket);
     socket.reconnect();
     while (true) {
-        const action: PayloadAction<Drug | { id: number } | void> = yield take(channel);
+        const action: PayloadAction<Entity | { id: number } | void> = yield take(channel);
         console.log(action);
         const db: SQLiteDatabase = yield call(getDBConnection);
         switch (action.type) {
@@ -135,22 +134,22 @@ export function* webSocketSaga() {
             case "connect":
                 console.log("Connected to server via WebSocket");
                 yield put({ type: "status/checkConnection" });
-                const tempData: TempDrug[] = yield call(getTempDrugs, db);
+                const tempData: TempEntity[] = yield call(getTempEntities, db);
                 yield call(() => syncOfflineData(tempData));
-                yield call(() => fetchDrugsServer());
-                yield call(deleteTempDrug, db);
+                yield call(() => fetchEntitiesServer());
+                yield call(deleteTempEntity, db);
                 break;
             case "itemAdded":
-                yield call(() => insertDrug(db, action.payload as Drug));
-                yield put({ type: "drug/addDrug", payload: action.payload as Drug });
+                yield call(() => insertEntity(db, action.payload as Entity));
+                yield put({ type: "entity/addEntity", payload: action.payload as Entity });
                 break;
             case "itemUpdated":
-                yield call(() => editDrug(db, action.payload as Drug));
-                yield put({ type: "drug/updateDrug", payload: action.payload as Drug });
+                yield call(() => editEntity(db, action.payload as Entity));
+                yield put({ type: "entity/updateEntity", payload: action.payload as Entity });
                 break;
             case "itemDeleted":
-                yield call(() => deleteDrug(db, (action.payload as { id: number }).id));
-                yield put({ type: "drug/removeDrug", payload: (action.payload as { id: number }).id });
+                yield call(() => deleteEntity(db, (action.payload as { id: number }).id));
+                yield put({ type: "entity/removeEntity", payload: (action.payload as { id: number }).id });
                 break;
             case "disconnect":
                 console.log("Disconnected from server. Reconnecting...");

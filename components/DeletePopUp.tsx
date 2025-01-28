@@ -3,7 +3,7 @@ import React from "react";
 import { Button, Dialog, MD3Theme, Portal, useTheme, Text } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 
-export default function DeletePopUp(props: {drugId: number, onCancel: () => void, onDelete: () => void}) {
+export default function DeletePopUp(props: {entityId: number, onCancel: () => void, onDelete: () => void}) {
     const theme = useTheme();
     const style = styles(theme);
     const navigation = useNavigation<any>(); //TODO: types...
@@ -13,9 +13,9 @@ export default function DeletePopUp(props: {drugId: number, onCancel: () => void
             <Dialog
                 visible={true}
             >
-                <Dialog.Title>Delete Drug</Dialog.Title>
+                <Dialog.Title>Delete Entity</Dialog.Title>
                 <Dialog.Content>
-                    <Text variant="bodyMedium">Are you sure you want to delete this drug? This action can not be reversed</Text>
+                    <Text variant="bodyMedium">Are you sure you want to delete this entity? This action can not be reversed</Text>
                 </Dialog.Content>
                 <Dialog.Actions>
                     <Button contentStyle={{paddingHorizontal: 8}} mode="contained" onPress={props.onCancel}>Cancel</Button>

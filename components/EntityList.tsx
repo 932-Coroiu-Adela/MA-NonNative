@@ -1,18 +1,18 @@
-import { Drug } from "@/redux/features/drug/drug";
+import { Entity } from "@/redux/features/entity/entity";
 import { View, StyleSheet, FlatList, Dimensions } from "react-native";
 import { RootState, AppDispatch } from "@/redux/store";
 import { useSelector, useDispatch } from "react-redux";
 import React, { useState } from "react";
-import DrugDisplay from "./DrugDisplay";
+import EntityDisplay from "./EntityDisplay";
 import { FAB, MD3Theme, useTheme } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import DeletePopUp from "./DeletePopUp";
-import { drugSlice, removeDrug } from "@/redux/features/drug/drugSlice";
+import { entitySlice, removeEntity } from "@/redux/features/entity/entitySlice";
 import { ConnectionNotification } from "./ConnectionNotification";
 import { ErrorNotification } from "./ErrorNotification";
 
-export default function DrugList() {
-    const drugs: Drug[] = useSelector((state: RootState) => state.drug.drugList);
+export default function EntityList() {
+    const entities: Entity[] = useSelector((state: RootState) => state.entity.entityList);
     const dispatch: AppDispatch = useDispatch();
     const theme = useTheme();
     const style = styles(theme);
@@ -35,26 +35,32 @@ export default function DrugList() {
             />
             {deleteIndex != -1 ? 
             <DeletePopUp 
-                drugId={deleteIndex}
+                entityId={deleteIndex}
                 onCancel = {() => {
                     useDeleteIndex(-1)
                 }}
                 onDelete = {() => {
-                    dispatch({type: "drug/remove", payload: deleteIndex})
+                    dispatch({type: "entity/remove", payload: deleteIndex})
                     useDeleteIndex(-1)
                 }}
             /> : null}
             <FlatList style={style.list}
-                data={drugs}
-                renderItem={({item})=><DrugDisplay
+                data={entities}
+                renderItem={({item})=>
+                <EntityDisplay
                     key={item.id}
-                    drug={item}
-                    onUpdate={(drugId: number) => {
+                    entity={item}
+                    onUpdate={(entityId: number) => {
                         navigation.navigate("update/[id]", {id: item.id});
                     }}
-                    onDelete={(drugId: number) => {
-                        useDeleteIndex(drugId)
-                    }} />}
+                    onDelete={(entityId: number) => {
+                        useDeleteIndex(entityId)
+                    }} 
+                    onPressForDetails={(entityId: number) => {
+                        console.log("Pressed for details");
+                        navigation.navigate("view/[id]", {id: item.id});
+                    }}
+                    />}
                 keyExtractor={item => item.id.toString()}
                 showsHorizontalScrollIndicator={false}
             />
@@ -82,6 +88,6 @@ const styles = (theme: MD3Theme) => StyleSheet.create({
         bottom: 0, 
         zIndex: 30, 
         borderRadius: 30, 
-        backgroundColor: theme.colors.primary
+        backgroundColor: theme.colors.surface
     }
 })

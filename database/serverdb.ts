@@ -1,57 +1,57 @@
-import { Drug } from "@/redux/features/drug/drug"
+import { Entity } from "@/redux/features/entity/entity"
 import { SERVER_IP, SERVER_PORT } from "@/constants/Constants"
 import axios, { Axios, AxiosResponse } from "axios"
-import { TempDrug } from "./localdb";
+import { TempEntity } from "./localdb";
 
-export const insertDrugServer = async (drug: Drug) => {
-    console.log(`Inserting drug ${drug}`);
-    const response: AxiosResponse<Drug> = await axios.post(`http://${SERVER_IP}:${SERVER_PORT}/drug`, drug);
+export const insertEntityServer = async (entity: Entity) => {
+    console.log(`Inserting entity ${entity}`);
+    const response: AxiosResponse<Entity> = await axios.post(`http://${SERVER_IP}:${SERVER_PORT}/transaction`, entity);
     if (response.status === 201) {
         return response.data;
     }
-    throw new Error("Failed to insert drug");
+    throw new Error("Failed to insert entity");
 }
 
-export const getDrugsServer = async () => {
-    const response: AxiosResponse<Drug[]> = await axios.get(`http://${SERVER_IP}:${SERVER_PORT}/drug`);
+export const getEntitiesServer = async () => {
+    const response: AxiosResponse<Entity[]> = await axios.get(`http://${SERVER_IP}:${SERVER_PORT}/transactions`);
     if (response.status === 200) {
         return response.data;
     }
-    throw new Error("Failed to fetch drugs");
+    throw new Error("Failed to fetch entities");
 }
 
-export const editDrugServer = async (drug: Drug) => {
-    console.log(`Editing drug ${drug}`);
-    const response: AxiosResponse<Drug> = await axios.put(`http://${SERVER_IP}:${SERVER_PORT}/drug?id=${drug.id}`, drug);
+export const editEntityServer = async (entity: Entity) => {
+    console.log(`Editing entity ${entity}`);
+    const response: AxiosResponse<Entity> = await axios.put(`http://${SERVER_IP}:${SERVER_PORT}/vehicle/${entity.id}`, entity);
     if (response.status === 200) {
         return response.data;
     }
-    throw new Error("Failed to edit drug");
+    throw new Error("Failed to edit entity");
 }
 
-export const deleteDrugServer = async (id: number) => {
-    console.log(`Deleting drug with id ${id}`);
-    const response: AxiosResponse = await axios.delete(`http://${SERVER_IP}:${SERVER_PORT}/drug?id=${id}`);
-    if (response.status === 204) {
+export const deleteEntityServer = async (id: number) => {
+    console.log(`Deleting entity with id ${id}`);
+    const response: AxiosResponse = await axios.delete(`http://${SERVER_IP}:${SERVER_PORT}/transaction/${id}`);
+    if (response.status === 200) {
         return;
     }
-    throw new Error("Failed to delete drug");
+    throw new Error("Failed to delete entity");
 }
 
-export const syncOfflineData = async (offlineData: TempDrug[]) => {
+export const syncOfflineData = async (offlineData: TempEntity[]) => {
     const idCounts: Record<number, number> = offlineData.reduce((acc, item) => {
         acc[item.id] = (acc[item.id] || 0) + 1;
         return acc;
     }, {} as Record<number, number>);
 
-    const filteredArray: TempDrug[] = offlineData.filter(item => idCounts[item.id] !== 2);
+    const filteredArray: TempEntity[] = offlineData.filter(item => idCounts[item.id] !== 2);
 
     const tasks = [];
     for (const item of filteredArray) {
         if (item.type === 1) {
-            tasks.push(insertDrugServer(item.drug!));
+            tasks.push(insertEntityServer(item.entity!));
         } else {
-            tasks.push(deleteDrugServer(item.id));
+            tasks.push(deleteEntityServer(item.id));
         }
     }
     await Promise.all(tasks);

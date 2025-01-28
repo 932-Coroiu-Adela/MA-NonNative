@@ -1,4 +1,5 @@
 import { RootState } from "@/redux/store";
+import React from "react";
 import { useState, useEffect } from "react";
 import { Snackbar } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
@@ -30,8 +31,8 @@ export const ConnectionNotification = () => {
             setVisible(false);
             },
         }}
-        duration={60000}
-    >
+        duration={60000}>
+        
         No internet connection
     </Snackbar>
     );

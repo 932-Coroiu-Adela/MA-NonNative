@@ -1,124 +1,130 @@
-import { Drug } from '@/redux/features/drug/drug';
+import { Entity } from '@/redux/features/entity/entity';
 import { openDatabaseAsync, SQLiteDatabase } from 'expo-sqlite'
 export const getDBConnection = async () => {
-    return await openDatabaseAsync("drug.db");
+    return await openDatabaseAsync("entity.db");
 };
 
-export type TempDrug = {
+export type TempEntity = {
     id: number,
     type: number,
-    drug?: Drug
+    entity?: Entity
 }
 
 export const createTable = async (db: SQLiteDatabase) => {
-    const exists = await db.getAllAsync(`SELECT name FROM sqlite_master WHERE type='table' AND name='Drug';`);
+    const exists = await db.getAllAsync(`SELECT name FROM sqlite_master WHERE type='table' AND name='Transactions';`);
+    console.log(exists);
     if (exists.length > 0) {
+        console.log("Table already exists");
         return;
     }
-    const query = `CREATE TABLE IF NOT EXISTS Drug (
+    const query = `CREATE TABLE IF NOT EXISTS Transactions (
         id INTEGER PRIMARY KEY,
-        name TEXT,
+        date TEXT,
+        amount REAL,
+        type TEXT,
         category TEXT,
-        price REAL,
-        numberOfUnits INTEGER,
-        manufacturer TEXT
+        description TEXT
     );`;
+    console.log("Creating Transactions table");
     await db.runAsync(query);
-    const tempTable = `CREATE TABLE IF NOT EXISTS TempDrug (
+    console.log("Created Transactions table");
+    const tempTable = `CREATE TABLE IF NOT EXISTS TempTransactions (
         id INTEGER,
         type INTEGER);`;
     await db.runAsync(tempTable);
 };
 
-export const insertDrug = async (db: SQLiteDatabase, drug: Drug) => {
-    const query = `INSERT INTO Drug (${drug.id !== -1 ? "id," : ""} name, category, price, numberOfUnits, manufacturer) VALUES (${drug.id !== -1 ? "?," : ""} ?, ?, ?, ?, ?);`;
-    const values = [drug.name, drug.category, drug.price, drug.numberOfUnits, drug.manufacturer];
-    if (drug.id !== -1) {
-        values.unshift(drug.id);
+export const insertEntity = async (db: SQLiteDatabase, entity: Entity) => {
+    const query = `INSERT INTO Transactions (${entity.id !== -1 ? "id," : ""} date, amount, type, category, description) VALUES (${entity.id !== -1 ? "?, " : ""} ?, ?, ?, ?, ?);`;
+    const values = [entity.date, entity.amount, entity.type, entity.category, entity.description];
+    if (entity.id !== -1) {
+        values.unshift(entity.id);
     }
     const response = await db.runAsync(query, values);
     console.log("Inserted into local db");
     return response.lastInsertRowId;
 }
 
-export const getDrugs = async (db: SQLiteDatabase) => {
-    const query = `SELECT * FROM Drug;`;
+export const getEntities = async (db: SQLiteDatabase) => {
+    const query = `SELECT * FROM Transactions;`;
     const response = await db.getAllAsync(query);
-    const drugs: Drug[] = [];
+    const entities: Entity[] = [];
     for (let i = 0; i < response.length; i++) {
-        drugs.push(response[i] as Drug);
+        entities.push(response[i] as Entity);
     }
-    return drugs;
+    return entities;
 }
 
-export const getDrug = async (db: SQLiteDatabase, id: number) => {
-    const query = `SELECT * FROM Drug WHERE id = ?;`;
+export const getEntity = async (db: SQLiteDatabase, id: number) => {
+    const query = `SELECT * FROM Transactions WHERE id = ?;`;
     const values = [id];
     const response = await db.getFirstAsync(query, values);
-    return response as Drug;
+    return response as Entity;
 }
 
-export const editDrug = async (db: SQLiteDatabase, drug: Drug) => {
-    const query = `UPDATE Drug SET name = ?, category = ?, price = ?, numberOfUnits = ?, manufacturer = ? WHERE id = ?;`;
-    const values = [drug.name, drug.category, drug.price, drug.numberOfUnits, drug.manufacturer, drug.id];
+export const editEntity = async (db: SQLiteDatabase, entity: Entity) => {
+    const query = `UPDATE Transactions SET date, amount, type, category, description WHERE id = ?;`;
+    const values = [entity.date, entity.amount, entity.type, entity.category, entity.description, entity.id];
     await db.runAsync(query, values);
 }
 
-export const deleteDrug = async (db: SQLiteDatabase, id: number) => {
-    const query = `DELETE FROM Drug WHERE id = ?;`;
+export const deleteEntity = async (db: SQLiteDatabase, id: number) => {
+    const query = `DELETE FROM Transactions WHERE id = ?;`;
     const values = [id];
     await db.runAsync(query, values);
     console.log("Deleted from local db");
 }
 
-export const rehydrateLocalDB = async (drugs: Drug[]) => {
+export const rehydrateLocalDB = async (entities: Entity[]) => {
     const db = await getDBConnection();
-    await db.runAsync(`DELETE FROM Drug;`);
-    for (let i = 0; i < drugs.length; i++) {
-        await insertDrug(db, drugs[i]);
+    await db.runAsync(`DELETE FROM Transactions;`);
+    for (let i = 0; i < entities.length; i++) {
+        await insertEntity(db, entities[i]);
     }
 }
 
-
 export const initDB = async () => {
+    console.log("Initializing DB");
     const db = await getDBConnection();
+    console.log("DB Connection established");
     await createTable(db);
+    console.log("Table created");
     return db;
 }
 
-export const insertTempDrug = async (db: SQLiteDatabase, tempDrug: TempDrug) => {
-    console.log("Inserting temp drug");
-    console.log(tempDrug);
-    const query = `INSERT INTO TempDrug (id, type) VALUES (?, ?);`;
-    const values = [tempDrug.id, tempDrug.type];
+export const insertTempEntity = async (db: SQLiteDatabase, tempEntity: TempEntity) => {
+    console.log("Inserting temp entity");
+    console.log(tempEntity);
+    const query = `INSERT INTO TempTransactions (id, type) VALUES (?, ?);`;
+    const values = [tempEntity.id, tempEntity.type];
     await db.runAsync(query, values);
 }
 
-export const getTempDrugs = async (db: SQLiteDatabase) => {
-    const query = `SELECT Drug.*, TempDrug.id, TempDrug.type FROM TempDrug LEFT JOIN Drug ON TempDrug.id = Drug.id;`;
+export const getTempEntities = async (db: SQLiteDatabase) => {
+    const query = `SELECT Transactions.*, TempTransactions.id, TempTransactions.type FROM TempTransactions LEFT JOIN Transactions ON TempTransactions.id = Transactions.id;`;
     const response = await db.getAllAsync(query);
-    const tempDrugs: TempDrug[] = [];
+    const tempEntities: TempEntity[] = [];
     for (let i = 0; i < response.length; i++) {
-        const responseDrug = response[i] as any;
-        const tempDrug = {
-            id: responseDrug.id,
-            type: responseDrug.type,
-            drug: responseDrug.name ? {
-                id: responseDrug.id,
-                name: responseDrug.name,
-                category: responseDrug.category,
-                price: responseDrug.price,
-                numberOfUnits: responseDrug.numberOfUnits,
-                manufacturer: responseDrug.manufacturer
+        const responseEntity = response[i] as any;
+        const tempEntity = {
+            id: responseEntity.id,
+            type: responseEntity.type,
+            entity: responseEntity.date ? {
+                id: responseEntity.id,
+                date: responseEntity.date,
+                amount: responseEntity.amount,
+                type: responseEntity.type,
+                category: responseEntity.category,
+                description: responseEntity.description
             }
                 : undefined
         }
-        tempDrugs.push(tempDrug);
+        tempEntities.push(tempEntity);
     }
-    return tempDrugs;
+    return tempEntities;
 }
 
-export const deleteTempDrug = async (db: SQLiteDatabase) => {
-    const query = `DELETE FROM TempDrug`;
+export const deleteTempEntity = async (db: SQLiteDatabase) => {
+    const query = `DELETE FROM TempTransactions`;
     await db.runAsync(query);
 }

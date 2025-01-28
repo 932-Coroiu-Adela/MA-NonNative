@@ -5,6 +5,7 @@ import { useMaterial3Theme } from "@pchmn/expo-material3-theme";
 import { MD3DarkTheme, MD3LightTheme, PaperProvider } from "react-native-paper";
 import { StatusBar, useColorScheme, Text } from "react-native";
 import { DataLoader } from "@/components/DataLoader";
+import React from "react";
 
 
 export default function RootLayout() {
@@ -12,11 +13,11 @@ export default function RootLayout() {
   const {theme} = useMaterial3Theme();
   const paperTheme =
     colorScheme === 'dark'
-      ? { ...MD3DarkTheme, colors: theme.dark }
+      ? { ...MD3LightTheme, colors: theme.light }
       : { ...MD3LightTheme, colors: theme.light };
   return (
-  <Provider store={store}>
-      <DataLoader />
+  <Provider store={store}> 
+      <DataLoader/>
       <PaperProvider theme={paperTheme}>
         <StatusBar
           hidden={true}
@@ -25,6 +26,7 @@ export default function RootLayout() {
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="add" options={{ headerShown: false }} />
           <Stack.Screen name="update/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="view/[id]" options={{ headerShown: false }} />
         </Stack>
       </PaperProvider>
   </Provider>

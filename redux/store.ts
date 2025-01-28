@@ -1,5 +1,5 @@
 import { configureStore } from "@reduxjs/toolkit";
-import { drugSlice } from "./features/drug/drugSlice";
+import { entitySlice } from "./features/entity/entitySlice";
 import createSagaMiddleware from "redux-saga";
 import { rootSaga } from "@/middleware/rootSaga";
 import { statusSlice } from "./features/status/statusSlice";
@@ -8,15 +8,20 @@ import { errorStatusSlice } from "./features/errorstatus/errorStatusSlice";
 const sagaMiddleware = createSagaMiddleware();
 
 export const store = configureStore({
-    reducer: { drug: drugSlice.reducer, status: statusSlice.reducer, errorStatus: errorStatusSlice.reducer },
+    reducer: { 
+        entity: entitySlice.reducer, //redux slice to manage state related to entities
+        status: statusSlice.reducer, 
+        errorStatus: errorStatusSlice.reducer },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware().concat([sagaMiddleware])
 });
 
-sagaMiddleware.run(rootSaga);
+sagaMiddleware.run(rootSaga); //the saga middleware listens for specific actions
+// dispatched t0 the store and when an action matches, it triggers the corresponding saga
+// to handle side effects
 
 
-export type RootState = ReturnType<typeof store.getState>;
+export type RootState = ReturnType<typeof store.getState>; //returning the current state of the store
 export type AppDispatch = typeof store.dispatch;
 export type AppStore = typeof store;
 
